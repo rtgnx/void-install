@@ -1,0 +1,19 @@
+cryptodevice: "{{install_disk}}3"
+bios_dev: "{{install_disk}}1"
+cryptoroot_name: "root"
+cryptoroot_dev: "/dev/mapper/{{cryptoroot_name}}"
+esp_dev: "{{install_disk}}2"
+subvol_mount_opts: "rw,noatime,compress-force=zstd:1,space_cache=v2"
+root_subvol: "@"
+subvolumes:
+  - {subvol: '@', target: '/'}
+  - {subvol: '@var', target: '/var'}
+  - {subvol: '@tmp', target: '/var/tmp'}
+  - {subvol: '@log', target: '/var/log'}
+  - {subvol: '@home', target: '/home'}
+  - {subvol: '@cache', target: '/var/cache'}
+  - {subvol: '@docker', target: '/var/lib/docker'}
+  - {subvol: '@libvirt', target: '/var/lib/libvirt'}
+  - {subvol: '@snapshots', target: '/.snapshots'}
+
+

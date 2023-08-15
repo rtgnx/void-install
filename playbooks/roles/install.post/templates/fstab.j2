@@ -1,0 +1,4 @@
+{% for subvolume in subvolumes %}
+UUID={{cryptoroot.stdout}} {{subvolume.target}} btrfs {{subvol_mount_opts}},subvol={{subvolume.subvol}}   0   0
+{% endfor %}
+{{esp_dev}}   /.esp vfat  rw,noatime   0  0

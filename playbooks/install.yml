@@ -1,0 +1,18 @@
+- name: OS Install on baremetal
+  hosts: [voidconf]
+  roles:
+    - install
+    - install.post
+  vars_prompt:
+    - name: "hostname"
+      prompt: "Hostname: "
+      private: false
+    - name: "install_disk"
+      prompt: "Install disk: "
+      private: false
+    - name: "root_passphrase"
+      prompt: "Root password: "
+      private: true
+    - name: "luks_passphrase"
+      prompt: "Luks passphrase: "
+      private: true

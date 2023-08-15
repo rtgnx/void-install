@@ -1,0 +1,111 @@
+- name: Check if EFI system
+  ansible.builtin.stat:
+    path: /sys/firmware/efi/efivars
+  register: efi
+
+- name: Umount all
+  shell: "umount -R /mnt"
+  ignore_errors: true
+
+- name: Close luks device if opened
+  community.crypto.luks_device:
+    device: "{{ install_disk }}3"
+    state: closed
+    name: "root"
+  ignore_errors: true
+
+- name: Clear luks header
+  shell: "dd if=/dev/zero of={{cryptodevice}} bs=512 count=10"
+  ignore_errors: true
+
+- name: Clear partition table
+  shell: "dd if=/dev/zero of={{install_disk}} conv=notrunc bs=512B count=4096"
+
+- name: Render partition table template
+  template:
+    src: "{{ role_path }}/templates/parttable.sfdisk.j2"
+    dest: /tmp/parttable.sfdisk
+  vars:
+    sector_size: 512
+    root_size: 100%
+
+- name: Write partition table
+  shell: "sfdisk {{ install_disk }} < /tmp/parttable.sfdisk"
+  args:
+    executable: /bin/bash 
+
+- name: Generate key file
+  shell: "dd if=/dev/urandom of=/tmp/key.bin bs=512 count=1"
+
+- name: Create LUKS container with specific encryption
+  community.crypto.luks_device:
+    device: "{{ cryptodevice }}"
+    state: present
+    cipher: "aes"
+    hash: "sha256"
+    type: "luks1" # GRUB best supports luks1
+    passphrase: "{{ luks_passphrase }}"
+    #keyfile: /tmp/key.bin
+
+- name: Add key file
+  community.crypto.luks_device:
+    device: "{{ cryptodevice }}"
+    state: present
+    cipher: "aes"
+    hash: "sha256"
+    type: "luks1" # GRUB best supports luks1
+    passphrase: "{{ luks_passphrase }}"
+    new_keyfile: "/tmp/key.bin"
+
+- name: Open luks container
+  community.crypto.luks_device:
+    device: "{{cryptodevice}}"
+    state: opened
+    keyfile: "/tmp/key.bin"
+    name: "{{cryptoroot_name}}"
+
+- name: Create filesystems
+  shell: "mkfs.{{item.type}} {{item.opts}} {{item.dev}}"
+  with_items:
+    - {type: 'vfat', opts: '-F32', dev: "{{esp_dev}}"}
+    - {type: 'btrfs', opts: '-f -L B_ROOT', dev: "{{cryptoroot_dev}}"}
+
+- name: Mount b_root
+  shell: "mount -t btrfs {{cryptoroot_dev}} /mnt"
+
+- name: Create subvolumes
+  shell: "btrfs subvolume create /mnt/{{item}}"
+  with_items: "{{subvolumes | map(attribute='subvol')}}"
+
+- name: Umount b_root
+  shell: "umount /mnt"
+  
+- name: Mount root subvolume
+  shell: "mount -o {{opts}} {{item.dev}} {{item.target}}"
+  vars:
+    opts: "rw,noatime,compress-force=zstd:1,space_cache=v2,subvol=@"
+  with_items:
+    - {dev: "{{cryptoroot_dev}}", target: '/mnt'}
+
+- name: Create install directories
+  file:
+    path: "/mnt{{ item }}"
+    state: directory
+  with_items: "{{subvolumes | map(attribute='target')}}"
+
+- name: Create esp directory
+  file:
+    path: "/mnt/.esp"
+    state: directory
+
+- name: Mount subvolumes
+  ansible.posix.mount:
+    path: "/mnt{{ item.target }}"
+    src: /dev/mapper/root
+    fstype: btrfs
+    state: mounted
+    opts: "rw,noatime,compress-force=zstd:1,space_cache=v2,subvol={{item.subvol}}"
+  with_items: "{{subvolumes}}"
+
+- name: Mount esp volume
+  shell: "mount {{esp_dev}} /mnt/.esp"

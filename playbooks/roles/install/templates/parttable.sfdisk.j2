@@ -1,0 +1,8 @@
+label: gpt
+device: {{install_disk}}
+unit: sectors
+sector-size: {{sector_size}}
+
+{{bios_dev}} : start=    2048, size=     2048,   type=21686148-6449-6E6F-744E-656564454649
+{{esp_dev}} : start=    4096, size=     524288, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B
+{{cryptodevice}} : start=    528384, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4

@@ -1,0 +1,75 @@
+- name: Check if EFI system
+  ansible.builtin.stat:
+    path: /sys/firmware/efi/efivars
+  register: efi
+
+- name: Create xbps key db
+  file:
+    path: /mnt/var/db/xbps/keys
+    state: directory
+
+- name: Copy keys
+  copy:
+    remote_src: yes
+    src: /var/db/xbps/keys
+    dest: /mnt/var/db/xbps/
+
+- name: Install base system
+  shell: "xbps-install -Sy -R {{ void_repo }} -r /mnt {{ pkgs }}"
+  vars:
+    void_repo: "https://repo-default.voidlinux.org/current"
+    pkgs: "base-system grub-btrfs snapper python3 curl wget git cryptsetup xtools vpm vsv"
+
+
+- name: Get broot uuid
+  shell: "blkid -o value -s UUID {{cryptoroot_dev}}"
+  register: cryptoroot
+
+- name: Get cryptodevice uuid
+  shell: "blkid -o value -s UUID {{cryptodevice}}"
+  register: cryptodevice
+
+- name: Install chroot scripts
+  template:
+    src: "{{role_path}}/templates/{{item.tpl}}"
+    dest: "{{item.target}}"
+    mode: 0755
+  with_items:
+    - {tpl: "chroot.sh.j2", target: '/mnt/tmp/chroot.sh'}
+    - {tpl: "grub_install.sh.j2", target: '/mnt/tmp/grub_install.sh'}
+  
+- name: Run xchroot scripts
+  shell: "/usr/bin/xchroot /mnt /tmp/chroot.sh"
+
+- name: Install config files
+  template:
+    src: "{{role_path}}/templates/{{item.tpl}}"
+    dest: "{{item.target}}"
+    mode: 0644
+  with_items:
+    - {tpl: 'grub.j2', target: '/mnt/etc/default/grub'}
+    - {tpl: 'crypttab.j2', target: '/mnt/etc/crypttab'}
+    - {tpl: '10-crypt.conf.j2', target: '/mnt/etc/dracut.conf.d/10-crypt.conf'}
+    - {tpl: 'fstab.j2', target: '/mnt/etc/fstab'}
+
+
+- name: Copy volume key
+  copy:
+    remote_src: yes
+    src: /tmp/key.bin
+    dest: /mnt/.key.bin
+    mode: 000
+
+- name: Install grub
+  shell: "/usr/bin/xchroot /mnt /tmp/grub_install.sh"
+
+- name: Rename grub config
+  copy:
+    remote_src: yes
+    src: /mnt/.esp/grub/grub.cfg.new
+    dest: /mnt/.esp/grub/grub.cfg
+
+- name: set root password
+  shell: "xchroot /mnt passwd"
+  args:
+    stdin: "{{root_passphrase}}\n{{root_passphrase}}\n"

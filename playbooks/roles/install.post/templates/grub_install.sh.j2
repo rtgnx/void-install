@@ -1,0 +1,8 @@
+{% if efi.stat.exists %}
+  grub-install --efi-directory=/.esp --boot-directory=/.esp {{install_disk}}
+{% else %}
+  grub-install --boot-directory=/.esp {{install_disk}}
+{% endif %}
+
+grub-mkconfig -o /.esp/grub/grub.cfg
+xbps-reconfigure -fa
