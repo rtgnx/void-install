@@ -144,6 +144,13 @@
   ansible.builtin.shell: "btrfs subvolume delete /.snapshots"
   when: gitops and snapper.rc == 1
 
+- name: Remove snapshots directory
+  ansible.builtin.file:
+    path: '/.snapshots'
+    state: directory
+  ignore_errors: true
+  when: gitops and snapper.rc == 1
+
 - name: Mount original snapshots subvol
   ansible.builtin.shell: "mount -a"
   when: gitops and snapper.rc == 1
