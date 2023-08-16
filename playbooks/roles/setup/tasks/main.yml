@@ -119,6 +119,7 @@
 - name: Check if root is configured for snapshots
   shell: "snapper list"
   register: snapper
+  ignore_errors: true
   when: gitops
 
 - name: Remove snapshots mount point
