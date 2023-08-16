@@ -4,33 +4,39 @@
   register: efi
 
 - name: Create xbps key db
-  file:
+  ansible.builtin.file:
     path: /mnt/var/db/xbps/keys
     state: directory
+    mode: 0755
+    owner: root
+    group: root
 
 - name: Copy keys
-  copy:
+  ansible.builtin.copy:
     remote_src: yes
-    src: /var/db/xbps/keys
-    dest: /mnt/var/db/xbps/
+    src: /var/db/xbps/keys/
+    dest: /mnt/var/db/xbps/keys/
+    mode: 0644
+    owner: root
+    group: root
 
 - name: Install base system
-  shell: "xbps-install -Sy -R {{ void_repo }} -r /mnt {{ pkgs }}"
+  ansible.builtin.shell: "xbps-install -Sy -R {{ void_repo }} -r /mnt {{ pkgs }}"
   vars:
     void_repo: "https://repo-default.voidlinux.org/current"
     pkgs: "base-system grub-btrfs snapper python3 curl wget git cryptsetup xtools vpm vsv"
 
 
 - name: Get broot uuid
-  shell: "blkid -o value -s UUID {{cryptoroot_dev}}"
+  ansible.builtin.shell: "blkid -o value -s UUID {{cryptoroot_dev}}"
   register: cryptoroot
 
 - name: Get cryptodevice uuid
-  shell: "blkid -o value -s UUID {{cryptodevice}}"
+  ansible.builtin.shell: "blkid -o value -s UUID {{cryptodevice}}"
   register: cryptodevice
 
 - name: Install chroot scripts
-  template:
+  ansible.builtin.template:
     src: "{{role_path}}/templates/{{item.tpl}}"
     dest: "{{item.target}}"
     mode: 0755
@@ -39,10 +45,10 @@
     - {tpl: "grub_install.sh.j2", target: '/mnt/tmp/grub_install.sh'}
   
 - name: Run xchroot scripts
-  shell: "/usr/bin/xchroot /mnt /tmp/chroot.sh"
+  ansible.builtin.shell: "/usr/bin/xchroot /mnt /tmp/chroot.sh"
 
 - name: Install config files
-  template:
+  ansible.builtin.template:
     src: "{{role_path}}/templates/{{item.tpl}}"
     dest: "{{item.target}}"
     mode: 0644
@@ -54,22 +60,22 @@
 
 
 - name: Copy volume key
-  copy:
+  ansible.builtin.copy:
     remote_src: yes
     src: /tmp/key.bin
     dest: /mnt/.key.bin
     mode: 000
 
 - name: Install grub
-  shell: "/usr/bin/xchroot /mnt /tmp/grub_install.sh"
+  ansible.builtin.shell: "/usr/bin/xchroot /mnt /tmp/grub_install.sh"
 
 - name: Rename grub config
-  copy:
+  ansible.builtin.copy:
     remote_src: yes
     src: /mnt/.esp/grub/grub.cfg.new
     dest: /mnt/.esp/grub/grub.cfg
 
 - name: set root password
-  shell: "xchroot /mnt passwd"
+  ansible.builtin.shell: "xchroot /mnt passwd"
   args:
     stdin: "{{root_passphrase}}\n{{root_passphrase}}\n"

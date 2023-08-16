@@ -4,7 +4,7 @@
   register: efi
 
 - name: Umount all
-  shell: "umount -R /mnt"
+  ansible.builtin.shell: "umount -R /mnt"
   ignore_errors: true
 
 - name: Close luks device if opened
@@ -15,14 +15,14 @@
   ignore_errors: true
 
 - name: Clear luks header
-  shell: "dd if=/dev/zero of={{cryptodevice}} bs=512 count=10"
+  ansible.builtin.shell: "dd if=/dev/zero of={{cryptodevice}} bs=512 count=10"
   ignore_errors: true
 
 - name: Clear partition table
-  shell: "dd if=/dev/zero of={{install_disk}} conv=notrunc bs=512B count=4096"
+  ansible.builtin.shell: "dd if=/dev/zero of={{install_disk}} conv=notrunc bs=512B count=4096"
 
 - name: Render partition table template
-  template:
+  ansible.builtin.template:
     src: "{{ role_path }}/templates/parttable.sfdisk.j2"
     dest: /tmp/parttable.sfdisk
   vars:
@@ -30,12 +30,12 @@
     root_size: 100%
 
 - name: Write partition table
-  shell: "sfdisk {{ install_disk }} < /tmp/parttable.sfdisk"
+  ansible.builtin.shell: "sfdisk {{ install_disk }} < /tmp/parttable.sfdisk"
   args:
     executable: /bin/bash 
 
 - name: Generate key file
-  shell: "dd if=/dev/urandom of=/tmp/key.bin bs=512 count=1"
+  ansible.builtin.shell: "dd if=/dev/urandom of=/tmp/key.bin bs=512 count=1"
 
 - name: Create LUKS container with specific encryption
   community.crypto.luks_device:
@@ -45,7 +45,6 @@
     hash: "sha256"
     type: "luks1" # GRUB best supports luks1
     passphrase: "{{ luks_passphrase }}"
-    #keyfile: /tmp/key.bin
 
 - name: Add key file
   community.crypto.luks_device:
@@ -65,36 +64,36 @@
     name: "{{cryptoroot_name}}"
 
 - name: Create filesystems
-  shell: "mkfs.{{item.type}} {{item.opts}} {{item.dev}}"
+  ansible.builtin.shell: "mkfs.{{item.type}} {{item.opts}} {{item.dev}}"
   with_items:
     - {type: 'vfat', opts: '-F32', dev: "{{esp_dev}}"}
     - {type: 'btrfs', opts: '-f -L B_ROOT', dev: "{{cryptoroot_dev}}"}
 
 - name: Mount b_root
-  shell: "mount -t btrfs {{cryptoroot_dev}} /mnt"
+  ansible.builtin.shell: "mount -t btrfs {{cryptoroot_dev}} /mnt"
 
 - name: Create subvolumes
-  shell: "btrfs subvolume create /mnt/{{item}}"
+  ansible.builtin.shell: "btrfs subvolume create /mnt/{{item}}"
   with_items: "{{subvolumes | map(attribute='subvol')}}"
 
 - name: Umount b_root
-  shell: "umount /mnt"
+  ansible.builtin.shell: "umount /mnt"
   
 - name: Mount root subvolume
-  shell: "mount -o {{opts}} {{item.dev}} {{item.target}}"
+  ansible.builtin.shell: "mount -o {{opts}} {{item.dev}} {{item.target}}"
   vars:
     opts: "rw,noatime,compress-force=zstd:1,space_cache=v2,subvol=@"
   with_items:
     - {dev: "{{cryptoroot_dev}}", target: '/mnt'}
 
 - name: Create install directories
-  file:
+  ansible.builtin.file:
     path: "/mnt{{ item }}"
     state: directory
   with_items: "{{subvolumes | map(attribute='target')}}"
 
 - name: Create esp directory
-  file:
+  ansible.builtin.file:
     path: "/mnt/.esp"
     state: directory
 
@@ -108,4 +107,4 @@
   with_items: "{{subvolumes}}"
 
 - name: Mount esp volume
-  shell: "mount {{esp_dev}} /mnt/.esp"
+  ansible.builtin.shell: "mount {{esp_dev}} /mnt/.esp"
