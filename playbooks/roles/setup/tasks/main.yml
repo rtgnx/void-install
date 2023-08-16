@@ -11,6 +11,8 @@
       - elogind
       - wireguard-tools
       - tailscale
+      - grub-btrfs
+      - grub-btrfs-runit
 
 
 - name: Enable system services
