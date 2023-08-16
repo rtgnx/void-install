@@ -1,0 +1,8 @@
+- name: Install X11
+  shell: "xbps-install -Sy {{' '.join(pkgs) }}"
+  vars:
+    pkgs:
+      - xorg
+      - pipewire
+      - alsa-pipewire
+  tags: ["desktop", "never"]
