@@ -20,7 +20,6 @@ subvolumes:
 tailscale_tskey: ""
 
 services:
-  - {name: "sshd", enabled: true}
   - {name: "gitops", enabled: true}
   - {name: 'snapperd', enabled: true }
   - {name: 'tailscaled', enabled: false }

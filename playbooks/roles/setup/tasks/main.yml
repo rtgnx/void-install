@@ -23,6 +23,7 @@
     dest: "/etc/runit/runsvdir/current/{{item}}"
     state: link
   with_items:
+    - sshd
     - cronie
     - rpcbind
     - statd
