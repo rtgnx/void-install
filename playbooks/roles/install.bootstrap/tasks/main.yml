@@ -87,3 +87,12 @@
     mode: "0644"
     owner: root
     group: root
+
+- name: Copy void-install onto new_root
+  ansible.builtin.copy:
+    remote_src: true
+    src: /void-install
+    dest: /mnt/.void-install
+    mode: 0755
+    owner: root
+    group: root
