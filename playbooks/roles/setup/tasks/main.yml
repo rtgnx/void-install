@@ -114,3 +114,35 @@
     mode: "0644"
     owner: root
     group: root
+
+## Snapper config
+- name: Check if root is configured for snapshots
+  shell: "snapper list"
+  register: snapper
+  when: gitops
+
+- name: Remove snapshots mount point
+  ansible.posix.mount:
+    path: '/.snapshots'
+    state: 'unmounted'
+  ignore_errors: true
+  when: gitops and snapper.rc == 1
+
+- name: Remove snapshots directory
+  ansible.builtin.file:
+    path: '/.snapshots'
+    state: absent
+  ignore_errors: true
+  when: gitops and snapper.rc == 1
+
+- name: Remove snapshots directory
+  ansible.builtin.shell: "snapper -c root create-config /"
+  when: gitops and snapper.rc == 1
+
+- name: Remove .snapshots subvol
+  ansible.builtin.shell: "btrfs subvolume delete /.snapshots"
+  when: gitops and snapper.rc == 1
+
+- name: Mount original snapshots subvol
+  ansible.builtin.shell: "mount -a"
+  when: gitops and snapper.rc == 1
