@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function install_dependencies() {
-  xbps-install -Sy ansible python3 curl
+  xbps-install -Sy ansible python3 curl git
 }
 
 function generate_ssh_keys() {
@@ -15,5 +15,8 @@ install_dependencies
 generate_ssh_keys
 
 cd /void-install
+
+git checkout ${VINSTALL_BRANCH:-master} && git pull
+
 ansible-playbook -i ./hosts.ini ./playbooks/install.yml
 ansible-playbook -i ./hosts.ini ./playbooks/setup.yml
