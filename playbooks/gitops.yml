@@ -1,3 +1,5 @@
 - hosts: localhost
   roles:
     - setup
+  vars:
+    gitops: true

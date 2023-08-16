@@ -1,5 +1,14 @@
 {
     "yaml.schemas": {
         "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": "file:///Users/adrian/src/github.com/rtgnx/infra/voidconf/playbooks/roles/install/tasks/main.yml"
+    },
+    "ansible.python.interpreterPath": "/opt/homebrew/bin/python3.10"
+    {
+      "ansible.python.interpreterPath": "/opt/homebrew/bin/python3",
+      "ansible.ansible.path": "/opt/homebrew/bin/ansible",
+      "ansible.ansible.useFullyQualifiedCollectionNames": true,
+      "ansible.ansibleLint.path": "/opt/homebrew/bin/ansible-lint",
+      "ansibleServer.trace.server": "verbose",
+      "ansible.ansibleLint.enabled": true
     }
 }

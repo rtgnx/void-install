@@ -23,3 +23,5 @@ services:
   - {name: "gitops", enabled: true}
   - {name: 'snapperd', enabled: true }
   - {name: 'tailscaled', enabled: false }
+
+gitops: false

@@ -97,3 +97,8 @@
     mode: "0644"
     owner: root
     group: root
+
+- name: Setup tailscale connection
+  shell: "tailscale up --ssh --auth-key {{tailscale_tskey}}"
+  when_tailscale: enabled
+  when: gitops
