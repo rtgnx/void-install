@@ -73,7 +73,17 @@
     src: /mnt/.esp/grub/grub.cfg.new
     dest: /mnt/.esp/grub/grub.cfg
 
-- name: set root password
+- name: Set root password
   ansible.builtin.shell: "xchroot /mnt passwd"
   args:
     stdin: "{{root_passphrase}}\n{{root_passphrase}}\n"
+
+
+- name: Copy resolv.conf file
+  ansible.builtin.copy:
+    remote_src: yes
+    src: /etc/resolv.conf
+    dest: /mnt/etc/resolv.conf
+    mode: "0644"
+    owner: root
+    group: root
