@@ -16,6 +16,23 @@ subvolumes:
   - {subvol: '@libvirt', target: '/var/lib/libvirt'}
   - {subvol: '@snapshots', target: '/.snapshots'}
 
+void_repo: https://repo-fastly.voidlinux.org/current
+system_pkgs:
+  - socklog-void
+  - cronie
+  - libnfs
+  - nfs-utils
+  - snapper
+  - dbus
+  - elogind
+  - wireguard-tools
+  - tailscale
+  - grub-btrfs
+  - grub-btrfs-runit
+  - ansible # required for post installation playbook updates
+  - python3
+  - xmirror
+
 
 tailscale_tskey: ""
 

@@ -1,21 +1,18 @@
+- name: Configure void mirror
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/00-repository-main.conf.j2"
+    dest: "/etc/xbps.d/00-repository-main.conf"
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Update mirrors
+  shell: "xbps-install -Syu"
+
 - name: Install system services
   shell: "xbps-install -Sy {{ ' '.join(pkgs) }}"
   vars:
-    pkgs:
-      - socklog-void
-      - cronie
-      - libnfs
-      - nfs-utils
-      - snapper
-      - dbus
-      - elogind
-      - wireguard-tools
-      - tailscale
-      - grub-btrfs
-      - grub-btrfs-runit
-      - ansible
-      - python3
-
+    pkgs: {{ system_pkgs }}
 
 - name: Enable system services
   ansible.builtin.file:
@@ -36,7 +33,7 @@
     - grub-btrfs
     - tailscaled
 
-- name: Create service directories 
+- name: Create service directories
   ansible.builtin.file:
     path: "/etc/sv/{{ item.name }}"
     state: directory
