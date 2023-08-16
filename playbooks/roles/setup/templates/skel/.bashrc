@@ -1,6 +1,5 @@
 #!/bin/bash
 
-[[ $- != *|* ]] && return
 
 # source starship config if present
 [ -f "$(command -v starship)" ] && \
@@ -20,7 +19,7 @@ export GOBIN=$GOPATH/bin
 [ ! -d "$GOPATH" ] && mkdir -p $GOPATH
 
 export PATH="$USER_BIN:$GOBIN:$PATH"
-export REAL_NAME="$(getent passwd $USER | cut -d' ' -f5)
+export REAL_NAME="$(getent passwd $USER | cut -d' ' -f5)"
 
 
 [ -f "$HOME/.env" ] && export $(cat $HOME/.env)
