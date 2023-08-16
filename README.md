@@ -25,8 +25,6 @@ curl https//github.com/username.keys > $HOME/.ssh/authorized_keys
 - Partition disk with the bios, esp, and root partition (luks1)
 - Create subvolumes (can be addjusted through group_vars)
 - Prompts for installation options (hostname, installation disk, passphrases for root, and luks)
+- snapshots with snapperd
+- bootstrap with chroot
 
-### TODO:
-
-- Setup snapshots with snapperd
-- Setup chroot connections for further installation steps
