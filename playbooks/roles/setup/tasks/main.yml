@@ -12,7 +12,7 @@
 - name: Install system services
   shell: "xbps-install -Sy {{ ' '.join(pkgs) }}"
   vars:
-    pkgs: {{ system_pkgs }}
+    pkgs: "{{ system_pkgs }}"
 
 - name: Install system config files
   ansible.builtin.template:
