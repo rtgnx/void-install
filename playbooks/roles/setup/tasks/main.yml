@@ -70,3 +70,29 @@
     group: root
   when: "{{item.enabled}}"
   with_items: "{{ services }}"
+
+- name: Root ssh keys
+  community.crypto.openssh_keypair:
+    path: /root/.ssh/id_rsa
+    force: true
+  register: keygen
+
+- name: Write public key to authorized_keys
+  ansible.builtin.copy:
+    content: "{{keygen.public_key}}"
+    dest: /root/.ssh/authorized_keys
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Scan locahost ssh keys
+  shell: "ssh-keyscan localhost"
+  register: "keyscan"
+
+- name: Write known_hosts
+  ansible.builtin.copy:
+    content: "{{keyscan.stdout}}"
+    dest: /root/.ssh/known_hosts
+    mode: "0644"
+    owner: root
+    group: root
