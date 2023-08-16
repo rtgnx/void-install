@@ -27,17 +27,17 @@
     pkgs: "base-system grub-btrfs snapper python3 curl wget git cryptsetup xtools vpm vsv"
 
 - name: Get broot uuid
-  ansible.builtin.shell: "blkid -o value -s UUID {{cryptoroot_dev}}"
+  ansible.builtin.shell: "blkid -o value -s UUID {{ cryptoroot_dev }}"
   register: cryptoroot
 
 - name: Get cryptodevice uuid
-  ansible.builtin.shell: "blkid -o value -s UUID {{cryptodevice}}"
+  ansible.builtin.shell: "blkid -o value -s UUID {{ cryptodevice }}"
   register: cryptodevice
 
 - name: Install chroot scripts
   ansible.builtin.template:
-    src: "{{role_path}}/templates/{{item.tpl}}"
-    dest: "{{item.target}}"
+    src: "{{ role_path }}/templates/{{ item.tpl }}"
+    dest: "{{ item.target }}"
     mode: 0755
   with_items:
     - {tpl: "chroot.sh.j2", target: '/mnt/tmp/chroot.sh'}
@@ -48,9 +48,9 @@
 
 - name: Install config files
   ansible.builtin.template:
-    src: "{{role_path}}/templates/{{item.tpl}}"
-    dest: "{{item.target}}"
-    mode: 0644
+    src: "{{ role_path }}/templates/{{ item.tpl }}"
+    dest: "{{ item.target }}"
+    mode: "0644"
   with_items:
     - {tpl: 'grub.j2', target: '/mnt/etc/default/grub'}
     - {tpl: 'crypttab.j2', target: '/mnt/etc/crypttab'}
@@ -76,7 +76,7 @@
 - name: Set root password
   ansible.builtin.shell: "xchroot /mnt passwd"
   args:
-    stdin: "{{root_passphrase}}\n{{root_passphrase}}\n"
+    stdin: "{{ root_passphrase }}\n{{ root_passphrase }}\n"
 
 
 - name: Copy resolv.conf file
