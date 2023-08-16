@@ -10,7 +10,7 @@
       - dbus
       - elogind
       - wireguard-tools
-      - tailscaled
+      - tailscale
 
 
 - name: Enable system services
