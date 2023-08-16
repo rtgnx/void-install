@@ -28,9 +28,41 @@
     - snapperd
     - dbus
     - elogind
+    - grub-btrfs
 
-- name: Custom Services 
-  include: './sv.yml'
+- name: Create service directories 
+  ansible.builtin.file:
+    path: "/etc/sv/{{item.name}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{services}}"
 
-- name: "Desktop module"
-  include: './desktop.yml'
+- name: Create service logger directories 
+  ansible.builtin.file:
+    path: "/etc/sv/{{item.name}}/log"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{services}}"
+
+- name: Install service templates
+  ansible.builtin.template:
+    src: "{{role_path}}/templates/sv/{{item.name}}/run.j2"
+    dest: "/etc/sv/{{item.name}}/run"
+    mode: 0750
+    owner: root
+    group: root
+  with_items: "{{services}}"
+
+- name: Install service templates
+  ansible.builtin.template:
+    src: "{{role_path}}/templates/sv/{{item.name}}/log/run.j2"
+    dest: "/etc/sv/{{item.name}}/log/run"
+    mode: 0750
+    owner: root
+    group: root
+  when: "{{item.enabled}}"
+  with_items: "{{ services }}"

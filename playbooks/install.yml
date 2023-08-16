@@ -1,8 +1,8 @@
 - name: OS Install on baremetal
   hosts: [voidconf]
   roles:
-    - install
-    - install.post
+    - install.disk.sata
+    - install.bootstrap
   vars_prompt:
     - name: "hostname"
       prompt: "Hostname: "

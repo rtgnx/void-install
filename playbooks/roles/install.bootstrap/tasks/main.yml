@@ -26,7 +26,6 @@
     void_repo: "https://repo-default.voidlinux.org/current"
     pkgs: "base-system grub-btrfs snapper python3 curl wget git cryptsetup xtools vpm vsv"
 
-
 - name: Get broot uuid
   ansible.builtin.shell: "blkid -o value -s UUID {{cryptoroot_dev}}"
   register: cryptoroot
@@ -57,7 +56,6 @@
     - {tpl: 'crypttab.j2', target: '/mnt/etc/crypttab'}
     - {tpl: '10-crypt.conf.j2', target: '/mnt/etc/dracut.conf.d/10-crypt.conf'}
     - {tpl: 'fstab.j2', target: '/mnt/etc/fstab'}
-
 
 - name: Copy volume key
   ansible.builtin.copy:
