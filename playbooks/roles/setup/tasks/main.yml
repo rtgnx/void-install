@@ -14,6 +14,14 @@
   vars:
     pkgs: {{ system_pkgs }}
 
+- name: Install system config files
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{item.tpl}}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - {tpl: 'default/grub-btrfs/config.j2', dest: '/etc/default/grub-btrfs/config'}
+
 - name: Enable system services
   ansible.builtin.file:
     src: "/etc/sv/{{ item }}"
