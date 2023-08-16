@@ -1,0 +1,19 @@
+#!/bin/bash
+
+function install_dependencies() {
+  xbps-install -Sy ansible python3 curl
+}
+
+function generate_ssh_keys() {
+  ssh-keygen -f $HOME/.ssh/id_rsa -N ""
+  cat $HOME/.ssh/id_rsa > $HOME/.ssh/authorized_keys
+}
+
+
+
+install_dependencies
+generate_ssh_keys
+
+cd /void-install
+ansible-playbook -i ./hosts.ini ./playbooks/install.yml
+ansible-playbook -i ./hosts.ini ./playbooks/setup.yml

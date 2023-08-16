@@ -1,0 +1,5 @@
+## using chroot only works when running directly from live iso
+- hosts: [new_root]
+  connection: community.general.chroot
+  roles:
+    - setup
