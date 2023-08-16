@@ -1,6 +1,6 @@
 - name: Configure void mirror
   ansible.builtin.template:
-    src: "{{ role_path }}/templates/00-repository-main.conf.j2"
+    src: "{{ role_path }}/templates/xbps.d/00-repository-main.conf.j2"
     dest: "/etc/xbps.d/00-repository-main.conf"
     mode: "0644"
     owner: root
