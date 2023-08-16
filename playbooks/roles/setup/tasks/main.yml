@@ -36,7 +36,7 @@
     - grub-btrfs
     - tailscaled
 
-name: Create service directories 
+- name: Create service directories 
   ansible.builtin.file:
     path: "/etc/sv/{{ item.name }}"
     state: directory
@@ -82,6 +82,7 @@ name: Create service directories
     dest: "/etc/runit/runsvdir/current/{{ item.name }}"
     state: link
   when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
 
 - name: Root ssh keys
   community.crypto.openssh_keypair:
