@@ -5,6 +5,8 @@ function install_dependencies() {
 }
 
 function generate_ssh_keys() {
+  [ -f "$HOME/.ssh/authorized_keys" ] && exit 0;
+
   ssh-keygen -f $HOME/.ssh/id_rsa -N ""
   cat $HOME/.ssh/id_rsa > $HOME/.ssh/authorized_keys
 }
