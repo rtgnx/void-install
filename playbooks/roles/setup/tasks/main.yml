@@ -100,5 +100,4 @@
 
 - name: Setup tailscale connection
   shell: "tailscale up --ssh --auth-key {{tailscale_tskey}}"
-  when_tailscale: enabled
   when: gitops
