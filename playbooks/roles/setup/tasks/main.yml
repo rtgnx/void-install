@@ -154,3 +154,8 @@
 - name: Mount original snapshots subvol
   ansible.builtin.shell: "mount -a"
   when: gitops and snapper.rc == 1
+
+- name: Install skel files
+  ansible.builtin.copy:
+    src: "{{ role_path }}/templates/skel"
+    dest: "/etc"
