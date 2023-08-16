@@ -1,24 +1,34 @@
-- name: Install system services
-  shell: "xbps-install -Sy {{' '.join(pkgs) }}"
-  vars:
-    pkgs:
-      - socklog-void
-      - cronie
-      - libnfs
-      - nfs-utils
-      - snapper
-      - dbus
-      - elogind
-      - wireguard-tools
-      - tailscaled
+- name: Configure void mirror
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/xbps.d/00-repository-main.conf.j2"
+    dest: "/etc/xbps.d/00-repository-main.conf"
+    mode: "0644"
+    owner: root
+    group: root
 
+- name: Update mirrors
+  shell: "xbps-install -Syu"
+
+- name: Install system services
+  shell: "xbps-install -Sy {{ ' '.join(pkgs) }}"
+  vars:
+    pkgs: "{{ system_pkgs }}"
+
+- name: Install system config files
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{item.tpl}}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  with_items:
+    - {tpl: 'default/grub-btrfs/config.j2', dest: '/etc/default/grub-btrfs/config'}
 
 - name: Enable system services
   ansible.builtin.file:
-    src: "/etc/sv/{{item}}"
-    dest: "/etc/runit/runsvdir/current/{{item}}"
+    src: "/etc/sv/{{ item }}"
+    dest: "/etc/runit/runsvdir/current/{{ item }}"
     state: link
   with_items:
+    - sshd
     - cronie
     - rpcbind
     - statd
@@ -28,9 +38,124 @@
     - snapperd
     - dbus
     - elogind
+    - grub-btrfs
+    - tailscaled
 
-- name: Custom Services 
-  include: './sv.yml'
+- name: Create service directories
+  ansible.builtin.file:
+    path: "/etc/sv/{{ item.name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
 
-- name: "Desktop module"
-  include: './desktop.yml'
+- name: Create service logger directories 
+  ansible.builtin.file:
+    path: "/etc/sv/{{ item.name }}/log"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
+
+- name: Install service templates
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/sv/{{ item.name }}/run.j2"
+    dest: "/etc/sv/{{ item.name }}/run"
+    mode: 0750
+    owner: root
+    group: root
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
+
+- name: Install service templates
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/sv/{{ item.name }}/log/run.j2"
+    dest: "/etc/sv/{{ item.name }}/log/run"
+    mode: 0750
+    owner: root
+    group: root
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
+
+- name: Enable service
+  ansible.builtin.file:
+    src: "/etc/sv/{{ item.name }}"
+    dest: "/etc/runit/runsvdir/current/{{ item.name }}"
+    state: link
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
+
+- name: Root ssh keys
+  community.crypto.openssh_keypair:
+    path: /root/.ssh/id_rsa
+    force: true
+  register: keygen
+
+- name: Write public key to authorized_keys
+  ansible.builtin.copy:
+    content: "{{ keygen.public_key }}"
+    dest: /root/.ssh/authorized_keys
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Scan locahost ssh keys
+  shell: "ssh-keyscan localhost"
+  register: "keyscan"
+
+- name: Write known_hosts
+  ansible.builtin.copy:
+    content: "{{ keyscan.stdout }}"
+    dest: /root/.ssh/known_hosts
+    mode: "0644"
+    owner: root
+    group: root
+
+## Snapper config
+- name: Check if root is configured for snapshots
+  shell: "snapper list"
+  register: snapper
+  ignore_errors: true
+  when: gitops
+
+- name: Remove snapshots mount point
+  ansible.posix.mount:
+    path: '/.snapshots'
+    state: 'unmounted'
+  ignore_errors: true
+  when: gitops and snapper.rc == 1
+
+- name: Remove snapshots directory
+  ansible.builtin.file:
+    path: '/.snapshots'
+    state: absent
+  ignore_errors: true
+  when: gitops and snapper.rc == 1
+
+- name: Remove snapshots directory
+  ansible.builtin.shell: "snapper -c root create-config /"
+  when: gitops and snapper.rc == 1
+
+- name: Remove .snapshots subvol
+  ansible.builtin.shell: "btrfs subvolume delete /.snapshots"
+  when: gitops and snapper.rc == 1
+
+- name: Remove snapshots directory
+  ansible.builtin.file:
+    path: '/.snapshots'
+    state: directory
+  ignore_errors: true
+  when: gitops and snapper.rc == 1
+
+- name: Mount original snapshots subvol
+  ansible.builtin.shell: "mount -a"
+  when: gitops and snapper.rc == 1
+
+- name: Install skel files
+  ansible.builtin.copy:
+    src: "{{ role_path }}/templates/skel"
+    dest: "/etc"

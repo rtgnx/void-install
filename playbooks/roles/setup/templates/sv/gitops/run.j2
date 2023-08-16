@@ -1,0 +1,13 @@
+#!/bin/sh
+
+exec 2>&1
+
+VINSTALL_BRANCH="${VINSTALL_BRANCH:-develop}"
+
+
+
+cd /.void-install/void-install
+
+git checkout ${VINSTALL_BRANCH} && git pull
+exec ansible-playbook -i hosts.ini ./playbooks/gitops.yml
+exec /bin/sleep 600
