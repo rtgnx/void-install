@@ -17,3 +17,8 @@ subvolumes:
   - {subvol: '@snapshots', target: '/.snapshots'}
 
 
+tailscale_tskey: ""
+
+services:
+  - {name: 'snapperd', enabled: true }
+  - {name: 'tailscaled', enabled: false }

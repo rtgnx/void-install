@@ -1,0 +1,36 @@
+- name: Install system services
+  shell: "xbps-install -Sy {{' '.join(pkgs) }}"
+  vars:
+    pkgs:
+      - socklog-void
+      - cronie
+      - libnfs
+      - nfs-utils
+      - snapper
+      - dbus
+      - elogind
+      - wireguard-tools
+      - tailscaled
+
+
+- name: Enable system services
+  ansible.builtin.file:
+    src: "/etc/sv/{{item}}"
+    dest: "/etc/runit/runsvdir/current/{{item}}"
+    state: link
+  with_items:
+    - cronie
+    - rpcbind
+    - statd
+    - nfs-server
+    - socklog-unix
+    - nanoklogd
+    - snapperd
+    - dbus
+    - elogind
+
+- name: Custom Services 
+  include: './sv.yml'
+
+- name: "Desktop module"
+  include: './desktop.yml'
