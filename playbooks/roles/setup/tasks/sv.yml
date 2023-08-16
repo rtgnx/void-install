@@ -5,6 +5,7 @@
     owner: root
     group: root
     mode: 0755
+  when: "{{item.enabled}}"
   with_items: "{{services}}"
 
 - name: Create service logger directories 
@@ -14,6 +15,7 @@
     owner: root
     group: root
     mode: 0755
+  when: "{{item.enabled}}"
   with_items: "{{services}}"
 
 - name: Install service templates
@@ -23,6 +25,7 @@
     mode: 0750
     owner: root
     group: root
+  when: "{{item.enabled}}"
   with_items: "{{services}}"
 
 - name: Install service templates
@@ -32,5 +35,13 @@
     mode: 0750
     owner: root
     group: root
+  when: "{{item.enabled}}"
+  with_items: "{{ services }}"
+
+- name: Enable service
+  ansible.builtin.file:
+    src: "{{role_path}}/templates/sv/{{item.name}}/log/run.j2"
+    dest: "/etc/sv/{{item.name}}/log/run"
+    state: link
   when: "{{item.enabled}}"
   with_items: "{{ services }}"

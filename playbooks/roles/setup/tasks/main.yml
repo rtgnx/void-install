@@ -1,5 +1,5 @@
 - name: Install system services
-  shell: "xbps-install -Sy {{' '.join(pkgs) }}"
+  shell: "xbps-install -Sy {{ ' '.join(pkgs) }}"
   vars:
     pkgs:
       - socklog-void
@@ -19,8 +19,8 @@
 
 - name: Enable system services
   ansible.builtin.file:
-    src: "/etc/sv/{{item}}"
-    dest: "/etc/runit/runsvdir/current/{{item}}"
+    src: "/etc/sv/{{ item }}"
+    dest: "/etc/runit/runsvdir/current/{{ item }}"
     state: link
   with_items:
     - sshd
@@ -34,43 +34,54 @@
     - dbus
     - elogind
     - grub-btrfs
+    - tailscaled
 
-- name: Create service directories 
+name: Create service directories 
   ansible.builtin.file:
-    path: "/etc/sv/{{item.name}}"
+    path: "/etc/sv/{{ item.name }}"
     state: directory
     owner: root
     group: root
     mode: 0755
-  with_items: "{{services}}"
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
 
 - name: Create service logger directories 
   ansible.builtin.file:
-    path: "/etc/sv/{{item.name}}/log"
+    path: "/etc/sv/{{ item.name }}/log"
     state: directory
     owner: root
     group: root
     mode: 0755
-  with_items: "{{services}}"
-
-- name: Install service templates
-  ansible.builtin.template:
-    src: "{{role_path}}/templates/sv/{{item.name}}/run.j2"
-    dest: "/etc/sv/{{item.name}}/run"
-    mode: 0750
-    owner: root
-    group: root
-  with_items: "{{services}}"
-
-- name: Install service templates
-  ansible.builtin.template:
-    src: "{{role_path}}/templates/sv/{{item.name}}/log/run.j2"
-    dest: "/etc/sv/{{item.name}}/log/run"
-    mode: 0750
-    owner: root
-    group: root
-  when: "{{item.enabled}}"
+  when: "{{ item.enabled }}"
   with_items: "{{ services }}"
+
+- name: Install service templates
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/sv/{{ item.name }}/run.j2"
+    dest: "/etc/sv/{{ item.name }}/run"
+    mode: 0750
+    owner: root
+    group: root
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
+
+- name: Install service templates
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/sv/{{ item.name }}/log/run.j2"
+    dest: "/etc/sv/{{ item.name }}/log/run"
+    mode: 0750
+    owner: root
+    group: root
+  when: "{{ item.enabled }}"
+  with_items: "{{ services }}"
+
+- name: Enable service
+  ansible.builtin.file:
+    src: "/etc/sv/{{ item.name }}"
+    dest: "/etc/runit/runsvdir/current/{{ item.name }}"
+    state: link
+  when: "{{ item.enabled }}"
 
 - name: Root ssh keys
   community.crypto.openssh_keypair:
@@ -80,7 +91,7 @@
 
 - name: Write public key to authorized_keys
   ansible.builtin.copy:
-    content: "{{keygen.public_key}}"
+    content: "{{ keygen.public_key }}"
     dest: /root/.ssh/authorized_keys
     mode: "0644"
     owner: root
@@ -92,12 +103,8 @@
 
 - name: Write known_hosts
   ansible.builtin.copy:
-    content: "{{keyscan.stdout}}"
+    content: "{{ keyscan.stdout }}"
     dest: /root/.ssh/known_hosts
     mode: "0644"
     owner: root
     group: root
-
-- name: Setup tailscale connection
-  shell: "tailscale up --ssh --auth-key {{tailscale_tskey}}"
-  when: gitops
