@@ -13,6 +13,8 @@
       - tailscale
       - grub-btrfs
       - grub-btrfs-runit
+      - ansible
+      - python3
 
 
 - name: Enable system services
